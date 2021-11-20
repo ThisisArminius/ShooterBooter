@@ -7,8 +7,10 @@ class Soldier(pygame.sprite.Sprite):
         self.speed = speed
         self.ammo = ammo
         self.start_ammo = ammo
-        self.shoot_cooldown = 0
         self.grenades = grenades
+        self.health = 100
+        self.max_health = self.health
+        self.shoot_cooldown = 0
         self.health = 100
         self.max_health = self.health
         self.direction = 1
@@ -20,13 +22,13 @@ class Soldier(pygame.sprite.Sprite):
         self.frame_index = 0
         self.action = 0
         self.update_time = pygame.time.get_ticks()
-        
-        #load all images for the players
+
+        # load all images for the players
         animation_types = ['Idle', 'Run', 'Jump', 'Death']
         for animation in animation_types:
-            #reset temporary list of images
+            # reset temporary list of images
             temp_list = []
-            #count number of files in the folder
+            # count number of files in the folder
             num_of_frames = len(os.listdir(f'img/{self.char_type}/{animation}'))
             for i in range(num_of_frames):
                 img = pygame.image.load(f'img/{self.char_type}/{animation}/{i}.png').convert_alpha()
@@ -38,21 +40,20 @@ class Soldier(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
-
     def update(self):
         self.update_animation()
         self.check_alive()
-        #update cooldown
+
+        # update cooldown
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1
 
-
     def move(self, moving_left, moving_right):
-        #reset movement variables
+        # reset movement variables
         dx = 0
         dy = 0
 
-        #assign movement variables if moving left or right
+        # assign movement variables if moving left or right
         if moving_left:
             dx = -self.speed
             self.flip = True
@@ -62,64 +63,59 @@ class Soldier(pygame.sprite.Sprite):
             self.flip = False
             self.direction = 1
 
-        #jump
-        if self.jump == True and self.in_air == False:
+        # jump
+        if self.jump and self.in_air:
             self.vel_y = -11
             self.jump = False
             self.in_air = True
 
-        #apply gravity
+        # apply gravity
         self.vel_y += GRAVITY
         if self.vel_y > 10:
-            self.vel_y
+            self.vel_y = self.vel_y
         dy += self.vel_y
 
-        #check collision with floor
+        # check collision with floor
         if self.rect.bottom + dy > 300:
             dy = 300 - self.rect.bottom
             self.in_air = False
 
-        #update rectangle position
+        # update rectangle position
         self.rect.x += dx
         self.rect.y += dy
-
 
     def shoot(self):
         if self.shoot_cooldown == 0 and self.ammo > 0:
             self.shoot_cooldown = 20
-            bullet = Bullet(self.rect.centerx + (0.6 * self.rect.size[0] * self.direction), self.rect.centery, self.direction)
+            bullet = Bullet(self.rect.centerx + (0.6 * self.rect.size[0] * self.direction), self.rect.centery,
+                            self.direction)
             bullet_group.add(bullet)
-            #reduce ammo
+            # reduce ammo
             self.ammo -= 1
 
-
     def update_animation(self):
-        #update animation
+        # update animation
         ANIMATION_COOLDOWN = 100
-        #update image depending on current frame
+        # update image depending on current frame
         self.image = self.animation_list[self.action][self.frame_index]
-        #check if enough time has passed since the last update
+        # check if enough time has passed since the last update
         if pygame.time.get_ticks() - self.update_time > ANIMATION_COOLDOWN:
             self.update_time = pygame.time.get_ticks()
             self.frame_index += 1
-        #if the animation has run out the reset back to the start
+        # if the animation has run out the reset back to the start
         if self.frame_index >= len(self.animation_list[self.action]):
             if self.action == 3:
                 self.frame_index = len(self.animation_list[self.action]) - 1
             else:
                 self.frame_index = 0
 
-
-
     def update_action(self, new_action):
-        #check if the new action is different to the previous one
+        # check if the new action is different to the previous one
         if new_action != self.action:
             self.action = new_action
-            #update the animation settings
+            # update the animation settings
             self.frame_index = 0
             self.update_time = pygame.time.get_ticks()
-
-
 
     def check_alive(self):
         if self.health <= 0:
@@ -127,7 +123,6 @@ class Soldier(pygame.sprite.Sprite):
             self.speed = 0
             self.alive = False
             self.update_action(3)
-
 
     def draw(self):
         screen.blit(pygame.transform.flip(self.image, self.flip, False), self.rect)
